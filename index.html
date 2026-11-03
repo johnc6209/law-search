@@ -31,15 +31,15 @@ footer{margin-top:28px;font-size:12px;color:var(--mu)}
 [hidden]{display:none!important}
 </style></head><body>
 <h1>법령·죄명 검색</h1>
-<nav id="tb"><button data-p="s" class="on">죄명 검색</button><button data-p="l">법령 링크</button></nav>
+<nav id="tb"><button data-p="l" class="on">법령 링크</button><button data-p="s">죄명 검색</button></nav>
 
-<section id="s">
-<input id="q" type="search" placeholder="예: 형법 250조, 특가법 5조의3 1항 2호, 사기" autocomplete="off" autofocus>
+<section id="s" hidden>
+<input id="q" type="search" placeholder="예: 형법 250조, 특가법 5조의3 1항 2호, 사기" autocomplete="off">
 <div class="ex">예시: <a>형법 250조</a><a>특가법 5조의11</a><a>성폭법 14조 2항</a><a>도교법 44조 1항</a><a>식품위생법 94조</a><a>위험운전</a></div>
 <div id="o"></div>
 </section>
 
-<section id="l" hidden>
+<section id="l">
 <nav id="lc"></nav>
 <input id="lq" type="search" placeholder="법령 이름으로 거르기" autocomplete="off">
 <ol id="ll"></ol>
@@ -1133,14 +1133,14 @@ document.addEventListener('click',function(e){
   else if(t.dataset.q){$('q').value=t.dataset.q;search(t.dataset.q)}
   else if(t.parentNode.className=='ex'&&t.tagName=='A'){$('q').value=t.textContent;search(t.textContent)}
 });
-$('tb').addEventListener('click',function(e){var p=e.target.dataset.p;if(!p)return;
-  [].forEach.call(this.children,function(b){b.className=b==e.target?'on':''});
-  $('s').hidden=p!='s';$('l').hidden=p!='l';if(p=='l')$('lq').focus();else $('q').focus()});
+function tab(p){[].forEach.call($('tb').children,function(b){b.className=b.dataset.p==p?'on':''});
+  $('s').hidden=p!='s';$('l').hidden=p!='l';(p=='l'?$('lq'):$('q')).focus()}
+$('tb').addEventListener('click',function(e){if(e.target.dataset.p)tab(e.target.dataset.p)});
 var cat=Object.keys(LINKS)[0];
 function links(){var f=nk($('lq').value),src=f?Object.keys(LINKS).map(function(k){return LINKS[k]}).join(' '):LINKS[cat];
   $('ll').innerHTML=src.split(' ').filter(function(s){return !f||nk(s).indexOf(f)>=0}).map(function(s){return '<li><a target="_blank" rel="noopener" href="https://casenote.kr/법령/'+s+'">'+esc(s.replace(/_/g,' '))+'</a></li>'}).join('');
   [].forEach.call($('lc').children,function(b){b.className=!f&&b.textContent==cat?'on':''})}
 Object.keys(LINKS).forEach(function(k){var b=document.createElement('button');b.textContent=k;b.onclick=function(){cat=k;$('lq').value='';links()};$('lc').appendChild(b)});
 $('lq').addEventListener('input',links);links();
-if(location.hash){var h0=decodeURIComponent(location.hash.slice(1));$('q').value=h0;search(h0)}
+if(location.hash){var h0=decodeURIComponent(location.hash.slice(1));tab('s');$('q').value=h0;search(h0)}else $('lq').focus();
 </script></body></html>
