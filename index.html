@@ -1083,7 +1083,6 @@ function otherHtml(k,raw){
 var ART='';
 function search(q){
   var o=$('o');ART='';
-  try{history.replaceState(null,'',q?'#'+encodeURIComponent(q):location.pathname)}catch(e){}
   q=q.trim();if(!q){o.innerHTML='';return}
   q=q.replace(/[①-⑨]/g,function(c){return ' '+('①②③④⑤⑥⑦⑧⑨'.indexOf(c)+1)+'항'});
   var m=q.match(/^(.*?)(?:제\s*)?(\d+)\s*조?\s*(?:의\s*(\d+))?(.*)$/);
@@ -1140,5 +1139,6 @@ function links(){var f=nk($('lq').value),src=f?Object.keys(LINKS).map(function(k
   [].forEach.call($('lc').children,function(b){b.className=!f&&b.textContent==cat?'on':''})}
 Object.keys(LINKS).forEach(function(k){var b=document.createElement('button');b.textContent=k;b.onclick=function(){cat=k;$('lq').value='';links()};$('lc').appendChild(b)});
 $('lq').addEventListener('input',links);links();
-if(location.hash){var h0=decodeURIComponent(location.hash.slice(1));tab('s');$('q').value=h0;search(h0)}else $('lq').focus();
+if(location.hash)try{history.replaceState(null,'',location.pathname)}catch(e){}
+$('q').value='';$('lq').value='';links();$('lq').focus();
 </script></body></html>
