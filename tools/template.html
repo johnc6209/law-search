@@ -150,7 +150,7 @@ function expand(r){
 /* ---------- 검색 ---------- */
 function findLaw(s){
   var k=nk(s);if(!k)return{};
-  var full=ALIAS[k]||(BY[k]&&BY[k].k);
+  var full=ALIAS[k]||ALIAS[k+'법']||(BY[k]&&BY[k].k)||(BY[k+'법']&&BY[k+'법'].k);
   if(full)return{law:BY[nk(full)]};
   var c=[];LAWS.forEach(function(L){if(nk(L.k).indexOf(k)==0)c.push(L)});
   Object.keys(ALIAS).forEach(function(a){if(a.indexOf(k)==0){var L=BY[nk(ALIAS[a])];if(c.indexOf(L)<0)c.push(L)}});
