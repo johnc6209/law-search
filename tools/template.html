@@ -174,9 +174,7 @@ function rowHtml(r,showLaw){
     h+=ex.length>12?'<details class="x"><summary>개별 죄명 '+ex.length+'개 보기</summary>'+chips+'</details>':'<div class="x">'+chips+'</div>'}
   return h+'</div>';
 }
-var RULE={1:['미수ㆍ예비ㆍ음모: 위 죄명표에 의함','공동정범ㆍ간접정범: 정범의 죄명과 동일한 각칙 본조 해당죄명','공범(교사 또는 방조): 각칙 본조 해당죄명 다음에 「교사」 또는 「방조」를 추가 (예: 살인교사, 사기방조)'],
-5:['정범ㆍ기수ㆍ미수ㆍ예비ㆍ음모: 별표 5에 의함','공범(교사 또는 방조): 「위 법률위반(구분 표시죄명)교사」 또는 「위 법률위반(구분 표시죄명)방조」']};
-RULE[2]=RULE[1].map(function(s){return s.replace('살인교사, 사기방조','상관폭행교사')});
+var RULE={5:['정범ㆍ기수ㆍ미수ㆍ예비ㆍ음모: 별표 5에 의함','공범(교사 또는 방조): 「위 법률위반(구분 표시죄명)교사」 또는 「위 법률위반(구분 표시죄명)방조」']};
 function notes(L){var a=(RULE[L.t]||[]).concat(L.notes);return a.length?'<div class="nt">'+a.map(function(s){return '<p>'+esc(s)+'</p>'}).join('')+'</div>':''}
 function otherHtml(k,raw){
   var name=k+'위반',c=LNAME[k]||raw.trim().replace(/\s+/g,'_');
