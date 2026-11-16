@@ -60,7 +60,8 @@ function esc(s){return s.replace(/[&<>"]/g,function(c){return{'&':'&amp;','<':'&
 function sp(s){return s?s.split(','):[]}
 
 /* ---------- 데이터 ---------- */
-var LAWS=[],BY={};
+ALIAS=Object.assign(Object.create(null),ALIAS);
+var LAWS=[],BY=Object.create(null);
 RAW.trim().split('\n').forEach(function(line){
   if(line[0]=='@'){var p=line.slice(1).split('|');var L={k:p[0],c:p[1],t:+p[2],rows:[],notes:[],arts:[]};LAWS.push(L);BY[nk(p[0])]=L;return}
   var L=LAWS[LAWS.length-1];
@@ -69,7 +70,7 @@ RAW.trim().split('\n').forEach(function(line){
   var r={a:f[0],h:sp(f[1]),o:sp(f[2]),n:n,c:f[4]||'',x:f[5]=='!',L:L};
   L.rows.push(r);if(L.arts.indexOf(r.a)<0)L.arts.push(r.a);
 });
-var LNAME={};Object.keys(LINKS).forEach(function(k){LINKS[k].split(' ').forEach(function(s){LNAME[nk(s)]=s})});
+var LNAME=Object.create(null);Object.keys(LINKS).forEach(function(k){LINKS[k].split(' ').forEach(function(s){LNAME[nk(s)]=s})});
 
 /* ---------- 죄명 펼치기 (예규 별표1 적용원칙 가·나·다) ---------- */
 var OPEN='([〔【',CLOSE=')]〕】';
@@ -141,8 +142,8 @@ function expand(r){
   if(/삭제/.test(r.n))return null;
   try{var a=core(r,0);}catch(e){return null}
   if(r.L.t>2){var p=r.L.k+'위반';a=a.map(function(x){return x?p+'('+x+')':p})}
-  a=a.map(function(x){return x.replace(/과실과실/g,'과실').replace(/\s+(?=[()])|(?<=[()])\s+/g,'')});
-  var seen={};a=a.filter(function(x){x=x.replace(/\s+(?=[()])|(?<=[()])\s+/g,'');if(seen[x])return 0;return seen[x]=1});
+  a=a.map(function(x){return x.replace(/과실과실/g,'과실').replace(/\s*([()])\s*/g,'$1')});
+  var seen={};a=a.filter(function(x){if(seen[x])return 0;return seen[x]=1});
   if(a.length<2)return null;
   return a;
 }
@@ -164,6 +165,7 @@ function artLabel(r){
   if(r.o.length)s+=' 제'+r.o.join('ㆍ')+'호';
   return s;
 }
+function artName(a){return '제'+(a.indexOf('의')<0?a+'조':a.replace('의','조의'))}
 function cn(L){return L.c}
 function artUrl(c,a){return 'https://casenote.kr/법령/'+c+(a&&a!='*'?'/제'+(a.indexOf('의')<0?a+'조':a.replace('의','조의')):'')}
 function rowHtml(r,showLaw){
@@ -182,11 +184,18 @@ function otherHtml(k,raw){
   '<div class="nt"><p>원칙: 「…법위반」으로 표시</p><p>공범: 공범에 관한 특별규정이 있으면 「'+esc(name)+'」, 없으면 「'+esc(name)+'교사」 또는 「'+esc(name)+' 방조」</p><p>미수: 「'+esc(name)+'」</p></div>';
 }
 var ART='';
+/* 조문 번호 찾기: '조'가 붙었거나 숫자 뒤가 비었거나 공백·숫자·'제'로 이어질 때만 조문으로 본다(예: '13세미만'은 죄명 검색) */
+function findArt(q){
+  var re=/(?:제\s*)?(\d+)\s*(조)?\s*(?:의\s*(\d+))?/g,m;
+  while(m=re.exec(q)){var rest=q.slice(re.lastIndex);
+    if(m[2]||/^(\s|제|\d|$)/.test(rest))return[0,q.slice(0,m.index),m[1],m[3],rest]}
+  return null;
+}
 function search(q){
   var o=$('o');ART='';
   q=q.trim();if(!q){o.innerHTML='';return}
   q=q.replace(/[①-⑨]/g,function(c){return ' '+('①②③④⑤⑥⑦⑧⑨'.indexOf(c)+1)+'항'});
-  var m=q.match(/^(.*?)(?:제\s*)?(\d+)\s*조?\s*(?:의\s*(\d+))?(.*)$/);
+  var m=findArt(q);
   if(m){
     var lawS=m[1].replace(/제\s*$/,'').trim(),a=m[2]+(m[3]?'의'+m[3]:''),rest=m[4];
     var hm=rest.match(/(\d+)\s*항/),om=rest.match(/(\d+(?:\s*의\s*\d+)?)\s*호/);
@@ -197,9 +206,9 @@ function search(q){
     if(f.law){
       var L=f.law,rows=L.rows.filter(function(r){return r.a==a}),note='';
       if(rows.length&&(h||ho)){var ex=rows.filter(function(r){return(!h||r.h.indexOf(h)>=0)&&(!ho||r.o.indexOf(ho)>=0)});
-        if(ex.length)rows=ex;else note='<p class="m">해당 항ㆍ호와 정확히 일치하는 항목이 없어 제'+esc(a.replace('의','조의'))+(a.indexOf('의')<0?'조':'')+' 전체를 표시합니다.</p>'}
+        if(ex.length)rows=ex;else note='<p class="m">해당 항ㆍ호와 정확히 일치하는 항목이 없어 '+esc(artName(a))+' 전체를 표시합니다.</p>'}
       if(!rows.length){rows=L.rows.filter(function(r){return r.a=='*'});
-        if(!rows.length){o.innerHTML='<div class="lw">'+esc(L.k)+'</div><p class="m">죄명표(별표 '+L.t+')에 제'+esc(a)+'조 항목이 없습니다.</p>'+(L.t>=5?'<div class="nt"><p>죄명표에 따로 정하지 않은 조문은 「'+esc(L.k)+'위반」으로 표시합니다(예규 6항 원칙).</p></div>':'')+'<p><a target="_blank" rel="noopener" href="'+esc(artUrl(L.c,a))+'">조문 보기 ↗</a></p>';return}}
+        if(!rows.length){o.innerHTML='<div class="lw">'+esc(L.k)+'</div><p class="m">죄명표(별표 '+L.t+')에 '+esc(artName(a))+' 항목이 없습니다.</p>'+(L.t>=5?'<div class="nt"><p>죄명표에 따로 정하지 않은 조문은 「'+esc(L.k)+'위반」으로 표시합니다(예규 6항 원칙).</p></div>':'')+'<p><a target="_blank" rel="noopener" href="'+esc(artUrl(L.c,a))+'">조문 보기 ↗</a></p>';return}}
       o.innerHTML='<div class="lw">'+esc(L.k)+'</div>'+note+rows.map(function(r){var x=rowHtml(r);return r.a=='*'?x.replace(esc(artUrl(L.c,'*')),esc(artUrl(L.c,a))):x}).join('')+notes(L);return;
     }
     if(f.other){o.innerHTML=otherHtml(f.other,lawS);return}
